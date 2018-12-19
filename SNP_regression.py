@@ -16,8 +16,6 @@ from pandas import DataFrame
 
 import matplotlib.pyplot as plt
 
-
-
 #
 #
 #X = full[[]]
@@ -46,6 +44,8 @@ import matplotlib.pyplot as plt
 low = 8
 high = 16391
 
+#===========================================================================================
+# 1. Data Loading 
 def load_data_CAD():
     SNP15 = pd.read_csv("D:/AI_Hack/GWAS_files/AIHack-SNP-Matrix-15.csv")
     Clin = pd.read_csv("D:/AI_Hack/GWAS_files/AIHack-Clinical.csv")
@@ -78,9 +78,11 @@ def load_data_LDL():
     full = full.drop("Unnamed: 0", axis=1)
     LDL = full.iloc[:,7]
     return LDL
+#===========================================================================================
+# 2. Statistical learning for prediction of significant SNPs 
 
-
-def calc_CAD(CAD):
+# Logistic Regression Model 
+def calc_CAD(CAD):  
     SNP_pvalues = []
     for i in range(low, high):
 
@@ -102,74 +104,71 @@ def calc_CAD(CAD):
         SNP_pvalues.append(-np.log(p_values[5]))
     return SNP_pvalues
     
-def svm(CAD):
-    SNP_pvalues = []
-    for i in range(low, high):
-        X = full.iloc[:,[2,3,4,5,6,7,i,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2]] #X Values for 1 SNP 
+    
+# Alternative methods but none gave successful Manhattan Plots 
+# def svm(CAD):
+#     SNP_pvalues = []
+#     for i in range(low, high):
+#         X = full.iloc[:,[2,3,4,5,6,7,i,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2]] #X Values for 1 SNP 
         
-        X = np.array(X) #convert dataframe to array
+#         X = np.array(X) #convert dataframe to array
        
-        #create logisitic regression model, and find weights 
-        clf = LinearSVC(random_state=0, tol=1e-5).fit(X, CAD)
+#         #create logisitic regression model, and find weights 
+#         clf = LinearSVC(random_state=0, tol=1e-5).fit(X, CAD)
         
-        denom = (2.0*(1.0+np.cosh(clf.decision_function(X))))
-        F_ij = np.dot((X/denom[:,None]).T,X) ## Fisher Information Matrix
-        Cramer_Rao = np.linalg.inv(F_ij) ## Inverse Information Matrix
-        sigma_estimates = np.array([np.sqrt(Cramer_Rao[i,i]) for i in range(Cramer_Rao.shape[0])]) # sigma for each coefficient
-        z_scores = clf.coef_[0]/sigma_estimates # z-score for eaach model coefficient
-        p_values = [stats.norm.sf(abs(x))*2 for x in z_scores] ### `two tailed test for p-values
-        SNP_pvalues.append(-np.log(p_values[5]))
-    return SNP_pvalues
+#         denom = (2.0*(1.0+np.cosh(clf.decision_function(X))))
+#         F_ij = np.dot((X/denom[:,None]).T,X) ## Fisher Information Matrix
+#         Cramer_Rao = np.linalg.inv(F_ij) ## Inverse Information Matrix
+#         sigma_estimates = np.array([np.sqrt(Cramer_Rao[i,i]) for i in range(Cramer_Rao.shape[0])]) # sigma for each coefficient
+#         z_scores = clf.coef_[0]/sigma_estimates # z-score for eaach model coefficient
+#         p_values = [stats.norm.sf(abs(x))*2 for x in z_scores] ### `two tailed test for p-values
+#         SNP_pvalues.append(-np.log(p_values[5]))
+#     return SNP_pvalues
 
-def forest(CAD):
-    SNP_pvalues = []
-    for i in range(8,9):
-#    range(low, high):
-        print (i)
-        X = full.iloc[:,[2,3,4,5,6,7,i,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2]] #X Values for 1 SNP 
+# def forest(CAD):
+#     SNP_pvalues = []
+#     for i in range(8,9):
+# #    range(low, high):
+#         print (i)
+#         X = full.iloc[:,[2,3,4,5,6,7,i,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2]] #X Values for 1 SNP 
         
-        X = np.array(X) #convert dataframe to array
+#         X = np.array(X) #convert dataframe to array
        
-        #create logisitic regression model, and find weights 
-        clf = RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0).fit(X, CAD)
+#         #create logisitic regression model, and find weights 
+#         clf = RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0).fit(X, CAD)
         
         
-        denom = (2.0*(1.0+np.cosh(clf.oob_decision_function_[:,0])))
-#        F_ij = np.dot((X/denom[:,None]).T,X) ## Fisher Information Matrix
-#        Cramer_Rao = np.linalg.inv(F_ij) ## Inverse Information Matrix
-#        sigma_estimates = np.array([np.sqrt(Cramer_Rao[i,i]) for i in range(Cramer_Rao.shape[0])]) # sigma for each coefficient
-#        z_scores = clf.coef_[0]/sigma_estimates # z-score for eaach model coefficient
-#        p_values = [stats.norm.sf(abs(x))*2 for x in z_scores] ### `two tailed test for p-values
-#        SNP_pvalues.append(-np.log(p_values[5]))
-    return clf.oob_decision_function_
+#         denom = (2.0*(1.0+np.cosh(clf.oob_decision_function_[:,0])))
+# #        F_ij = np.dot((X/denom[:,None]).T,X) ## Fisher Information Matrix
+# #        Cramer_Rao = np.linalg.inv(F_ij) ## Inverse Information Matrix
+# #        sigma_estimates = np.array([np.sqrt(Cramer_Rao[i,i]) for i in range(Cramer_Rao.shape[0])]) # sigma for each coefficient
+# #        z_scores = clf.coef_[0]/sigma_estimates # z-score for eaach model coefficient
+# #        p_values = [stats.norm.sf(abs(x))*2 for x in z_scores] ### `two tailed test for p-values
+# #        SNP_pvalues.append(-np.log(p_values[5]))
+#     return clf.oob_decision_function_
 
+
+#===========================================================================================
+# Flagging of missing data 
 def flag_alleles(SNP_pvalues):
     lst = []
     col = []
     for i in range(len(SNP_pvalues)):
         if SNP_pvalues[i] > -np.log10((10**(-5)/(10**1))):
-            col.append(full.columns[i+8])
-            
-            
- 
-    
+            col.append(full.columns[i+8]) 
     return col
 
 
 
 def calc_HDL(HDL):
     SNP_pvalues = []
-   
     for i in range(low,high):
         X = full.iloc[:,[1,2,3,4,5,7,i,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2]] #X Values for 1 SNP 
         
 #        X = np.array(X, dtype = float) #convert dataframe to array
         
 #        X = X + np.ones(shape = np.shape(X))
-        
-    
         fvalue, pvalue = sk.f_regression(X, HDL)
-        
         SNP_pvalues.append(-np.log(pvalue[5]))
        
     return SNP_pvalues
@@ -178,9 +177,7 @@ def calc_LDL(LDL):
     SNP_pvalues = []
     for i in range(low,high):
         X = full.iloc[:,[2,3,4,5,6,i,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2]] #X Values for 1 SNP 
-        
         X = np.array(X) #convert dataframe to array
-   
         fvalue, pvalue = sk.f_regression(X, LDL)
         
 #        for j in range(len(X)):
@@ -191,7 +188,8 @@ def calc_LDL(LDL):
     return SNP_pvalues
 
 
-
+#===========================================================================================
+3. Manhattan Plots
 def graph_CAD(SNP_pvalues):
     df = DataFrame({'gene' : ['gene-%i' % i for i in np.arange(len(SNP_pvalues))],
     'minuslog10pvalue' : SNP_pvalues})
@@ -241,11 +239,8 @@ def graph_LDL(SNP_pvalues):
     plt.ylabel(r'$-log(p_{i})$')
     plt.show()
     
-def QQ_plots_CAD(x):
+# def QQ_plots_CAD(x):
     
-    stats.probplot(x, dist = 'norm', plot=pylab)
-    pylab.show()
-    pass
-
-
-
+#     stats.probplot(x, dist = 'norm', plot=pylab)
+#     pylab.show()
+#     pass
